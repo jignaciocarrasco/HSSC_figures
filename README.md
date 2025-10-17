@@ -1,6 +1,7 @@
 # DOI
 
-[![DOI]https://doi.org/10.5281/zenodo.17376148
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17376148.svg)](https://doi.org/10.5281/zenodo.17376148)
+
 
 # "Prioritizing Global Equity in Migration Research, *Humanities and Social Sciences Communications*."
 
