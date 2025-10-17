@@ -1,0 +1,21 @@
+"income_ISO3","team_income","n","total","percent"
+"High income","Collaboration",3139,81028,3.87396949202745
+"High income","High income",72953,81028,90.034309127709
+"High income","",100,81028,0.123414128449425
+"High income","Lower middle income",887,81028,1.0946833193464
+"High income","Upper middle income",3949,81028,4.87362393246779
+"Low income","Collaboration",1003,9151,10.9605507594798
+"Low income","High income",6655,9151,72.7242924270572
+"Low income","",492,9151,5.37646158889739
+"Low income","Lower middle income",290,9151,3.16905256256147
+"Low income","Upper middle income",711,9151,7.76964266200415
+"Lower middle income","Collaboration",2512,20898,12.020289022873
+"Lower middle income","High income",14147,20898,67.6954732510288
+"Lower middle income","",65,20898,0.311034548760647
+"Lower middle income","Lower middle income",2368,20898,11.3312278686956
+"Lower middle income","Upper middle income",1806,20898,8.64197530864197
+"Upper middle income","Collaboration",3881,30103,12.8924027505564
+"Upper middle income","High income",15879,30103,52.7488954589244
+"Upper middle income","",32,30103,0.106301697505232
+"Upper middle income","Lower middle income",410,30103,1.36199049928579
+"Upper middle income","Upper middle income",9901,30103,32.8904095937282

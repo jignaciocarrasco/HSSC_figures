@@ -1,0 +1,198 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+rm(list = ls())
+
+Sys.setenv(LANG = "en")
+library(xlsx)
+library(readr)
+library(readxl)
+library(tidyverse)
+library(stringr)
+library(stringi)
+library(gghighlight)
+library(countrycode)
+library(countries)
+library(janitor)
+library(sf)
+
+library(janitor)
+library(sf)
+library(ggthemes)
+library(here)
+library(viridis)
+library(ggplot2)
+library(formatR)
+library(gtools)
+library(nnet) 
+library(patchwork)
+library(ggh4x)
+
+library(plm)
+library(broom)
+library(ggalluvial)
+
+library(pals)
+```
+
+# Load data ---------------------------------------------------------------
+
+## Large datasets (move load to different notebook)
+
+```{r}
+aggregates <- read_csv("../aggregated_data/aggregates.csv")
+aggregates_year <- read_csv("../aggregated_data/aggregates_year.csv")
+```
+## Convert vars to factor. read_csv changes original type.
+```{r}
+aggregates_year <- aggregates_year %>% 
+  mutate(subregion_rf = as_factor(subregion),
+        subregion_rf = relevel(subregion_rf, "Northern America"),
+        continent = as_factor(continent),
+        continent = relevel(continent, "Americas"))
+```
+
+## Figure 6. Regression
+
+```{r}
+regr_numeric <- c("population_n",
+                  "immig_stock",
+                  "immig_relative_stock",
+                  "emig_stock",
+                  "emig_stock_rel_ctry",
+                  "research_GDP",
+                  "research",
+                  "GDP")
+
+aggregates_mod <- aggregates_year %>% 
+    filter(!is.na(ISO3)) %>% 
+    filter(pubyear %in% c(1996, 2000, 2005, 2010, 2015, 2020),
+           !is.na(GDP) & !is.na(research)) %>% 
+    mutate(repr_y_s_2 = as.factor(if_else(repr_y_s %in% c("Fair", "Over"), 0, 1)),
+           across(all_of(regr_numeric), ~ .x + 0.000000000001))
+```
+
+## Linear probability model.
+
+### Functions
+```{r}
+tidy_r1 <- function(reg) {
+  reg %>% tidy(conf.int = TRUE) %>% 
+    filter(!str_detect(term, 'pubyear'), 
+           !term %in% c("(Intercept)", "log(population_n)")) %>% 
+    mutate(term = str_remove(term, "subregion_rf"),
+           term = str_remove(term, "continent"),
+           term = case_when(
+               term == "log(GDP)" ~  "GDPpc",
+               term == "log(research_GDP)" ~  "Research as % of GDPpc",
+               term == "gsouthGlobal South" ~ "Global South",
+               term == "log(emig_stock)" ~ "Emigration stock",
+               term == "log(immig_stock)" ~ "Immigration stock",
+               TRUE ~ term),
+           term = fct_reorder(term, estimate),
+           significant = if_else(p.value <= 0.05, false = 0, 1),
+           effects = case_when(
+               estimate < 0 ~ "over",
+               estimate == 0 ~ "fair",
+               estimate > 0 ~ "under"
+           ))
+  
+}
+
+plot_reg <- function(reg_tidy, ptitle) { 
+    
+    reg_tidy %>%  
+        filter(term != "(Intercept)") %>% 
+        ggplot(aes(estimate, term)) +
+        geom_point(aes(color = factor(significant))) +
+        geom_errorbarh(aes(xmin = conf.low, xmax = conf.high, color = factor(significant)), height = 0) +
+        geom_vline(xintercept = 0, lty = 2) +
+        theme_minimal() +
+        theme(axis.text = element_text(size = 7),
+              axis.title.x = element_text(size = 6),
+              legend.position="none",
+              plot.title = element_text(size=8)) +
+        labs(title = ptitle,
+             y = NULL,
+             x = "Regression coefficient") +
+        scale_color_manual(values=c("0" = "#434343", "1" = "#6BA2D6"))
+}
+```
+### Depvar: Under-research
+
+- Aim of regression: understand how countries economic resources (GDP and research investment) and geographic regions affects likelihood of being an under-researched country.
+- log(GDP) works better than factor version, as it is significant. Income groups are not significant.
+- Note migration variables have been removed, as they are part of the dependent variable.
+- pubyear transformed to factor.
+```{r}
+r1_continent <- lm(as.numeric(repr_y_s_2) ~ as.factor(pubyear) + continent + log(population_n) + log(GDP) + log(research_GDP), aggregates_mod)
+r1_region <- lm(as.numeric(repr_y_s_2) ~ as.factor(pubyear) + subregion_rf + log(population_n) + log(GDP) + log(research_GDP), aggregates_mod)
+```
+
+### Depvar: Research salience
+```{r}
+#Absolute stocks
+r2_continent <- lm(log(as.numeric(art_country_y)) ~ as.factor(pubyear) + continent + log(population_n) + log(GDP) + log(immig_stock) + log(emig_stock) + log(research_GDP), aggregates_mod)
+r2_region <- lm(log(as.numeric(art_country_y))  ~ as.factor(pubyear) + subregion_rf + log(population_n) + log(GDP) + log(immig_stock) + log(emig_stock) + log(research_GDP), aggregates_mod)
+
+#Relative stocks
+r2_continent_rel <- lm(log(as.numeric(art_country_y)) ~ as.factor(pubyear) + continent + log(population_n) + log(GDP) + log(immig_relative_stock) + log(emig_stock_rel_ctry) + log(research_GDP), aggregates_mod)
+r2_region_rel <- lm(log(as.numeric(art_country_y))  ~ as.factor(pubyear) + subregion_rf + log(population_n) + log(GDP) + log(immig_relative_stock) + log(emig_stock_rel_ctry) + log(research_GDP), aggregates_mod)
+```
+
+### Plots
+```{r}
+# Under-research
+r1_continent_tidy <- r1_continent %>% tidy_r1 
+(r1_continent_plot <- r1_continent_tidy %>% plot_reg("1A - Underrepresentation:\n Continents"))
+ggsave("../output_figures/cplot_continent.png", plot = last_plot())
+
+r1_region_tidy <- r1_region %>% tidy_r1
+(r1_region_plot <- r1_region_tidy %>% plot_reg("1B - Underrepresentation:\n Subregions"))
+ggsave("../output_figures/cplot_subregion.png", plot = last_plot())
+
+# Research salience
+r2_continent_tidy <- r2_continent %>% tidy_r1 
+(r2_continent_plot <- r2_continent_tidy %>% plot_reg("2A - Salience:\n Continents"))
+ggsave("../output_figures/cplot_counts_continent.png", plot = last_plot())
+
+r2_region_tidy <- r2_region %>% tidy_r1 
+(r2_region_plot <- r2_region_tidy %>% plot_reg("2B - Salience:\n Subregions"))
+ggsave("../output_figures/cplot_counts_subregion.png", plot = last_plot())
+
+# Research salience. Relative.Note the results are exactly the same as with absolute numbers!
+r2_continent_rel_tidy <- r2_continent_rel %>% tidy_r1 
+(r2_continent_rel_plot <- r2_continent_rel_tidy %>% plot_reg("Model S.1:Continents"))
+ggsave("../output_figures/cplot_counts_continent_rel.png", plot = last_plot())
+
+r2_region_rel_tidy <- r2_region_rel %>% tidy_r1 
+(r2_region_rel_plot <- r2_region_rel_tidy %>% plot_reg("Model S.2: Subregions"))
+ggsave("../output_figures/cplot_counts_subregion_rel.png", plot = last_plot())
+
+```
+### Combining plots
+```{r}
+
+r1_continent_plot / r1_region_plot #/ r1_gsouth_plot  
+
+ggsave("../output_figures/cplot_combined.png", width = 6, height = 7, dpi = 500, limitsize = F, plot = last_plot())
+
+r2_continent_plot / r2_region_plot #/ r2_gsouth_plot 
+
+ggsave("../output_figures/cplot_counts_combined.png", width = 6, height = 7, dpi = 500, limitsize = F, plot = last_plot())
+
+(r1_continent_plot + r1_region_plot) / (r2_continent_plot + r2_region_plot) 
+ggsave("../output_figures/figure_6_cplot_all.png", width = 6, height = 7, dpi = 500, limitsize = F, plot = last_plot())
+```
+
+
+
+
+
+
+
+
+

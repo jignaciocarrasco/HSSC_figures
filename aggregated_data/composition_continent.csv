@@ -1,0 +1,43 @@
+"continents_gr","team_continent","n","total","percent"
+"Africa","Europe",4052,10532,38.4732244587923
+"Africa","Africa",2202,10532,20.9077098366882
+"Africa","Northern America",1965,10532,18.6574249905051
+"Africa","Collaboration",1654,10532,15.7045195594379
+"Africa","Asia",302,10532,2.86745157614888
+"Africa","Oceania",282,10532,2.67755412077478
+"Africa","Lat.America & Car.",75,10532,0.712115457652867
+"Asia","Europe",9156,31641,28.9371385228027
+"Asia","Northern America",8384,31641,26.49726620524
+"Asia","Asia",7325,31641,23.1503429095161
+"Asia","Collaboration",4554,31641,14.3927183085237
+"Asia","Oceania",1793,31641,5.66669827123037
+"Asia","Africa",215,31641,0.67949811952846
+"Asia","Lat.America & Car.",214,31641,0.67633766315856
+"Europe","Europe",35442,46688,75.912440027416
+"Europe","Northern America",4870,46688,10.4309458533242
+"Europe","Collaboration",3585,46688,7.67863262508568
+"Europe","Asia",1116,46688,2.39033584647018
+"Europe","Oceania",747,46688,1.59998286497601
+"Europe","Lat.America & Car.",641,46688,1.37294379712132
+"Europe","Africa",287,46688,0.61471898560658
+"Lat.America & Car.","Northern America",5013,11668,42.9636612958519
+"Lat.America & Car.","Lat.America & Car.",3047,11668,26.1141583818992
+"Lat.America & Car.","Europe",1741,11668,14.9211518683579
+"Lat.America & Car.","Collaboration",1676,11668,14.3640726774083
+"Lat.America & Car.","Asia",83,11668,0.711347274597189
+"Lat.America & Car.","Oceania",82,11668,0.702776825505656
+"Lat.America & Car.","Africa",26,11668,0.222831676379842
+"Northern America","Northern America",21827,30207,72.2580858741351
+"Northern America","Europe",3805,30207,12.5964180487966
+"Northern America","Collaboration",2514,30207,8.32257423775946
+"Northern America","Lat.America & Car.",744,30207,2.4630052636806
+"Northern America","Asia",671,30207,2.22133942463667
+"Northern America","Oceania",487,30207,1.61220909060814
+"Northern America","Africa",159,30207,0.526368060383355
+"Oceania","Oceania",3674,5442,67.5119441381845
+"Oceania","Collaboration",769,5442,14.1308342521132
+"Oceania","Europe",454,5442,8.34252113193679
+"Oceania","Northern America",403,5442,7.40536567438442
+"Oceania","Asia",104,5442,1.91106210951856
+"Oceania","Africa",25,5442,0.459389930172731
+"Oceania","Lat.America & Car.",13,5442,0.23888276368982

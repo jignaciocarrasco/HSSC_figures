@@ -1,0 +1,187 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+rm(list = ls())
+
+Sys.setenv(LANG = "en")
+library(xlsx)
+library(readr)
+library(readxl)
+library(tidyverse)
+library(stringr)
+library(stringi)
+library(gghighlight)
+library(countrycode)
+library(countries)
+library(janitor)
+library(sf)
+
+library(janitor)
+library(sf)
+library(ggthemes)
+library(here)
+library(viridis)
+library(ggplot2)
+library(formatR)
+library(gtools)
+library(nnet) 
+library(patchwork)
+library(ggh4x)
+
+library(plm)
+library(broom)
+library(ggalluvial)
+
+library(pals)
+```
+
+# Load data ---------------------------------------------------------------
+
+## Large datasets (move load to different notebook)
+
+```{r}
+aggregates <- read_csv("../aggregated_data/aggregates.csv")
+gd_world_or <- read_sf("../aggregated_data/TM_WORLD_BORDERS-0.3")
+```
+# Figure 2A. Map
+
+```{r}
+gd_world <- gd_world_or %>%
+  select(ISO3, LON, LAT) %>% 
+  filter(ISO3 != "ATA")
+
+corpus_shape_sel <- left_join(aggregates, gd_world, by = join_by(ISO3))
+```
+
+```{r}
+(map_repr_s <- corpus_shape_sel %>% 
+    ggplot(aes(geometry = geometry)) +
+    geom_sf(aes()) +
+    coord_sf(datum = NA) + 
+    geom_sf(aes(fill = repr_s)) +
+    theme_map() +
+    theme(legend.title = element_text(size = 10),
+          legend.text = element_text(size = 9),
+          legend.position = "bottom",
+          plot.title = element_text(hjust = 0.5, size = 14),
+          plot.subtitle = element_text(hjust = 0.5, size = 12)) +
+   labs(fill = "Research representation index") +
+    scale_fill_manual(values = c("#d1bfa3", "#6baed6", "#e34a33"), na.value = "gray"))
+```
+
+```{r}
+p_legend <- aggregates %>% 
+    ggplot(aes(x = log(emig_immig), y = log(art_country))) +
+    geom_point(aes(color = repr_s), alpha = .6) +
+    scale_color_manual(values = c("#d1bfa3", "#6baed6", "#e34a33"), na.value = "gray") +
+    labs(color = "Research representation") +
+    theme_minimal() +
+    theme(
+      legend.title = element_text(size = 10),
+      legend.text = element_text(size = 9),
+      legend.key.size = unit(0.6, "lines"),
+      legend.spacing = unit(0.3, "lines"),
+      legend.box.spacing = unit(0.3, "lines"),
+      legend.background = element_blank(),
+      legend.box.background = element_blank())
+
+only_legend <- cowplot::get_legend(p_legend)
+
+```
+# Figure 2B. Scatter
+
+## World and subregions
+```{r}
+(scat_plot <- aggregates %>% 
+    filter(!is.na(repr_s), mig_rel_index <= 100) %>% 
+    ggplot(aes(x = log(emig_immig), y = log(art_country))) +
+    geom_point(aes(color = repr_s), alpha = .6) +
+    scale_color_manual(values = c("#d1bfa3", "#6baed6", "#e34a33")) +
+    labs(color = "Research representation",
+         size = "Relative migration index",
+         x = "Immigration + emigration stock (log)",
+         y = "Research salience (log)") + 
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        legend.title = element_text(size = 10)))
+```
+
+## Continents. Selected version
+```{r}
+design = "
+#A
+BC
+DE
+"
+
+(scatter_continents_repr_s <- scat_plot + 
+  geom_text(data = subset(aggregates, repr_s == "Under" & continent != "Europe"),
+            aes(x = log(emig_immig), y = log(art_country), label = ISO3),
+            size = 3.5, check_overlap = T) +
+    geom_text(data = subset(aggregates, repr_s == "Under" & continent == "Europe"),
+            aes(x = log(emig_immig), y = log(art_country), label = ISO3),
+            size = 3, check_overlap = T) +
+    geom_text(data = subset(aggregates, ISO3 == "USA"),
+              aes(x = log(emig_immig), y = log(art_country), label = ISO3),
+              size = 3.5, check_overlap = T) +
+  ggh4x::facet_manual(~continent, design = design)) 
+```
+
+# Combine figures 2A and 2B
+```{r}
+# Remove legend before combining plots.
+(map_repr_s_new <- map_repr_s + theme(legend.position = "none"))
+
+scatter_continents_repr_s <- scatter_continents_repr_s + theme(legend.position = "none")
+
+combined_map_scatter <- map_repr_s_new / scatter_continents_repr_s
+
+combined_map_scatter + 
+  inset_element(
+    only_legend,
+    left = 0.02, bottom = 0.9, right = 0.2, top = .9, 
+    align_to = 'panel'
+  )
+
+ggsave("../output_figures/figure_2.png", width = 50, height = 25, units = "cm", dpi = 500, scale = 1, plot = last_plot())
+```
+
+# Appendix
+
+## Figure S2. Relative migration.
+```{r}
+design = "
+#A
+BC
+DE
+"
+
+(scat_plot_rel <- aggregates %>% 
+    filter(!is.na(repr_rel_s)) %>% 
+    ggplot(aes(x = log(mig_rel_index), y = log(art_country))) +
+    geom_point(aes(color = repr_rel_s)) +
+   geom_text(data = subset(aggregates, repr_rel_s == "Under"),
+            aes(x = log(mig_rel_index), y = log(art_country), label = ISO3),
+            check_overlap = T) +
+    scale_color_manual(values = c("#f0e6d2", "#6baed6", "#e34a33")) +
+    labs(color = "Research representation",
+         x = "Relative immigration + emigration (log)",
+         y = "Research salience (log)") + 
+    theme_minimal() +
+    theme(legend.position = c(0.2, 0.9)) +
+  ggh4x::facet_manual(~continent, design = design)) 
+
+ggsave("../output_figures/figure_S2_scatter_continents_repr_rel_s.png", plot = last_plot())
+```
+
+
+
+
+
+
+
+
+
