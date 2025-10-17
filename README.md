@@ -1,3 +1,7 @@
+# DOI
+
+[![DOI]https://doi.org/10.5281/zenodo.17376148
+
 # "Prioritizing Global Equity in Migration Research, *Humanities and Social Sciences Communications*."
 
 This repository contains a description of the scripts and required aggregated data to replicate figures in the manuscript "Prioritizing Global Equity in Migration Research". *Humanities and Social Sciences Communications*.
@@ -66,3 +70,5 @@ This repository contains a description of the scripts and required aggregated da
 
 - Data files:
   - "sc_scores.csv": individual level data. Dataset not available due to license restrictions.
+
+
